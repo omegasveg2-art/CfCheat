@@ -1,0 +1,26 @@
+name: build
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        aosp: [12, 13, 14]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unzip project
+        run: unzip -q cf_esp.zip
+      - name: AOSP headers
+        working-directory: cf_esp
+        run: |
+          mkdir -p third_party/aosp && cd third_party/aosp
+          for r in platform_frameworks_native platform_system_core platform_hardware_libhardware; do
+            git clone -q --depth 1 -b android${{ matrix.aosp }}-release https://github.com/aosp-mirror/$r.git ${r#platform_}
+          done
+      - name: Build
+        working-directory: cf_esp
+        run: |
+          NDK=${ANDROID_NDK_LATEST_HOME:-$ANDROID_NDK_HOME}
+          CXX=$
